@@ -9,6 +9,16 @@ dotenv.config();
 const router = express.Router();
 
 const clients = new Set();
+router.post("/valid", async (req, res) => {
+    console.log(req.body);
+    try {
+        const data = jwt.verify(req.body.token ,process.env.SECRET_KEY);
+        res.status(200).json({result:true,owner:data.email})
+    } catch (e) {
+        res.status(401).json({result:false,message:e.message})
+        
+    }
+})
 
 router.post("/register", async (req, res) => {
     // console.log({ ...req.body })
@@ -31,14 +41,14 @@ router.post("/register", async (req, res) => {
 router.post("/auth", async (req, res) => {
     let { email, password } = req.body;
     let findData = await account.findOne({ email });
-
+    if (!findData) {
+        return res.json({ result: "아이디나 비번 유효하지않다." })
+    }
     const com = await bcrypt.compare(password, findData.password)
     if (findData && com) {
         const token = jwt.sign({ email: findData.email }, process.env.SECRET_KEY, { expiresIn: 60 * 60 * 12 })
         res.json({ result: true, message: token });
         console.log(token)
-    } else {
-        res.json({ result: "아이디나 비번 유효하지않다." })
     }
 
 });
