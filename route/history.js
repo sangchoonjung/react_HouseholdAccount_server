@@ -46,6 +46,27 @@ router.get("/", async(req, res) => {
     return res.status(200).json({ result: true,datas:datas});
 })
 
+router.get("/search", async (req, res) => {
+    const begin = new Date(req.query.begin).toISOString().slice(0,10);
+    const endDate = new Date(req.query.end);
+    endDate.setDate(endDate.getDate() + 1);
+    const end = endDate.toISOString().slice(0, 10);
+    const account = req.logonEmail;
+    const itemDate = { $gte: begin, $lt: end };
+
+    try {
+        const datas = await history.find({
+            account: account,
+            itemDate: itemDate
+        }).sort("itemDate").lean();
+        console.log(datas.length)
+        return res.status(200).json({ result: true, datas: datas });
+    } catch(err) {
+        res.status(401).json({ result: false, "message": err.message });
+    }
+    
+});
+
 
 
 router.get("/delete", (req, res) => {
